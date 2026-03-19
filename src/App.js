@@ -84,6 +84,9 @@ function App() {
   const [filter, setFilter] = useState('All');
   const [showForm, setShowForm] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [search, setSearch] = useState('');
+  const [darkMode, setDarkMode] = useState(true);
+  const [showNewsFeed, setShowNewsFeed] = useState(false);
 
   const scamTypes = ['All','UPI Fraud','Job Scam','OLX Scam','Lottery Scam','KYC Fraud','Phishing','Fake Customer Care','Investment Scam','Matrimonial Scam','Fake Police Call','Credit Card Fraud'];
 
@@ -108,83 +111,164 @@ function App() {
     setScams(data || []);
   }
 
-  const filtered = filter === 'All' ? scams : scams.filter(s => s.scam_type === filter);
+  const filtered = scams.filter(s => {
+    const matchFilter = filter === 'All' || s.scam_type === filter;
+    const matchSearch = search === '' ||
+      (s.city || '').toLowerCase().includes(search.toLowerCase()) ||
+      (s.title || '').toLowerCase().includes(search.toLowerCase()) ||
+      (s.scam_type || '').toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
   const totalLost = filtered.reduce((sum, s) => sum + (s.amount_lost || 0), 0);
 
-  return (
-    <div style={{ fontFamily: 'sans-serif', background: '#0f172a', minHeight: '100vh' }}>
+  const bg = darkMode ? '#0f172a' : '#f1f5f9';
+  const headerBg = darkMode ? '#1e293b' : '#ffffff';
+  const borderColor = darkMode ? '#334155' : '#e2e8f0';
+  const textColor = darkMode ? 'white' : '#1e293b';
+  const mutedColor = darkMode ? '#94a3b8' : '#64748b';
 
-      <div style={{ background: '#1e293b', color: 'white', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderBottom: '1px solid #334155' }}>
-        <h1 style={{ margin: 0, fontSize: '20px' }}>🇮🇳 Scam Tracker India</h1>
+  return (
+    <div style={{ fontFamily: 'sans-serif', background: bg, minHeight: '100vh' }}>
+
+      {/* Header */}
+      <div style={{ background: headerBg, color: textColor, padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', borderBottom: `1px solid ${borderColor}` }}>
+        <h1 style={{ margin: 0, fontSize: '18px', color: textColor }}>🇮🇳 Scam Tracker India</h1>
+
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="🔍 City ya scam search karo..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ padding: '6px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: darkMode ? '#0f172a' : '#f8fafc', color: textColor, fontSize: '14px', width: '200px' }}
+        />
+
+        {/* Filter */}
         <select onChange={e => setFilter(e.target.value)}
-          style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #475569', background: '#0f172a', color: 'white', fontSize: '14px' }}>
+          style={{ padding: '6px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: darkMode ? '#0f172a' : '#f8fafc', color: textColor, fontSize: '14px' }}>
           {scamTypes.map(type => <option key={type} value={type}>{type}</option>)}
         </select>
-        <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto', alignItems: 'center' }}>
+
+        <div style={{ display: 'flex', gap: '10px', marginLeft: 'auto', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Stats */}
           <div style={{ background: '#ef444420', border: '1px solid #ef4444', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', color: '#ef4444' }}>
             {filtered.length} scams
           </div>
           <div style={{ background: '#f9731620', border: '1px solid #f97316', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', color: '#f97316' }}>
             ₹{totalLost.toLocaleString()} lost
           </div>
+
+          {/* Buttons */}
+          <button onClick={() => setShowNewsFeed(!showNewsFeed)}
+            style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#854d0e', color: 'white', fontSize: '13px', cursor: 'pointer' }}>
+            📰 News Feed
+          </button>
           <button onClick={() => setShowDashboard(true)}
-            style={{ padding: '6px 16px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }}>
+            style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', fontSize: '13px', cursor: 'pointer' }}>
             📊 Dashboard
           </button>
+          <button onClick={() => setDarkMode(!darkMode)}
+            style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#475569', color: 'white', fontSize: '13px', cursor: 'pointer' }}>
+            {darkMode ? '☀️ Light' : '🌙 Dark'}
+          </button>
           <button onClick={() => setShowForm(true)}
-            style={{ padding: '6px 16px', borderRadius: '8px', border: 'none', background: '#ef4444', color: 'white', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }}>
-            + Report Scam
+            style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#ef4444', color: 'white', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}>
+            + Report
           </button>
         </div>
       </div>
 
-      <div style={{ background: '#1e293b', padding: '8px 24px', display: 'flex', gap: '16px', flexWrap: 'wrap', borderBottom: '1px solid #334155' }}>
+      {/* Legend */}
+      <div style={{ background: headerBg, padding: '8px 24px', display: 'flex', gap: '16px', flexWrap: 'wrap', borderBottom: `1px solid ${borderColor}` }}>
         {Object.entries(scamColors).map(([type, color]) => (
           <div key={type} onClick={() => setFilter(type)}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#94a3b8', cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: mutedColor, cursor: 'pointer' }}>
             <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color }}></div>
             {type}
           </div>
         ))}
       </div>
 
-      <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: 'calc(100vh - 110px)', width: '100%' }}>
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CartoDB' />
-        {filtered.map(scam => {
-          const coords = cityCoords[(scam.city || '').toLowerCase()];
-          if (!coords) return null;
-          return (
-            <CircleMarker key={scam.id} center={coords} radius={12}
-              fillColor={scamColors[scam.scam_type] || '#ffffff'}
-              color={scamColors[scam.scam_type] || '#ffffff'}
-              weight={2} fillOpacity={0.7}>
-              <Popup>
-                <div style={{ minWidth: '200px' }}>
-                  <b style={{ fontSize: '14px' }}>{scam.title}</b>
-                  <hr style={{ margin: '6px 0' }} />
-                  <p style={{ margin: '3px 0' }}>🏷️ {scam.scam_type}</p>
-                  <p style={{ margin: '3px 0' }}>📍 {scam.city}, {scam.state}</p>
-                  <p style={{ margin: '3px 0' }}>💸 ₹{scam.amount_lost?.toLocaleString()}</p>
-                  <p style={{ margin: '3px 0' }}>📞 {scam.phone_number}</p>
-                  <p style={{ margin: '3px 0' }}>🔍 {scam.source}</p>
+      {/* Main Content */}
+      <div style={{ display: 'flex', height: 'calc(100vh - 110px)' }}>
+
+        {/* News Feed Panel */}
+        {showNewsFeed && (
+          <div style={{ width: '300px', background: headerBg, borderRight: `1px solid ${borderColor}`, overflowY: 'auto', padding: '16px' }}>
+            <h3 style={{ color: textColor, margin: '0 0 16px', fontSize: '15px' }}>📰 Latest Scams</h3>
+            {scams.slice(0, 20).map(scam => (
+              <div key={scam.id} style={{ padding: '10px', marginBottom: '8px', background: darkMode ? '#0f172a' : '#f8fafc', borderRadius: '8px', border: `1px solid ${borderColor}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ background: `${scamColors[scam.scam_type]}20`, color: scamColors[scam.scam_type], padding: '2px 6px', borderRadius: '10px', fontSize: '11px' }}>
+                    {scam.scam_type}
+                  </span>
                 </div>
-              </Popup>
-            </CircleMarker>
-          );
-        })}
-      </MapContainer>
+                <p style={{ color: textColor, margin: '4px 0', fontSize: '13px', fontWeight: 'bold' }}>{scam.title}</p>
+                <p style={{ color: mutedColor, margin: '2px 0', fontSize: '11px' }}>📍 {scam.city}, {scam.state}</p>
+                <p style={{ color: '#22c55e', margin: '2px 0', fontSize: '11px' }}>💸 ₹{scam.amount_lost?.toLocaleString()}</p>
+                {/* Share Button */}
+                <button onClick={() => {
+                  const text = `🚨 Scam Alert: ${scam.title} in ${scam.city}! Stay safe. #ScamTrackerIndia`;
+                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                }}
+                  style={{ marginTop: '6px', padding: '3px 8px', borderRadius: '6px', border: 'none', background: '#1da1f2', color: 'white', fontSize: '11px', cursor: 'pointer' }}>
+                  🐦 Share
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Map */}
+        <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ flex: 1, height: '100%' }}>
+          <TileLayer
+            url={darkMode
+              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"}
+            attribution='&copy; CartoDB'
+          />
+          {filtered.map(scam => {
+            const coords = cityCoords[(scam.city || '').toLowerCase()];
+            if (!coords) return null;
+            const count = filtered.filter(s => (s.city || '').toLowerCase() === (scam.city || '').toLowerCase()).length;
+            const radius = Math.min(8 + count * 3, 25);
+            return (
+              <CircleMarker key={scam.id} center={coords} radius={radius}
+                fillColor={scamColors[scam.scam_type] || '#ffffff'}
+                color={scamColors[scam.scam_type] || '#ffffff'}
+                weight={2} fillOpacity={0.7}>
+                <Popup>
+                  <div style={{ minWidth: '200px' }}>
+                    <b style={{ fontSize: '14px' }}>{scam.title}</b>
+                    <hr style={{ margin: '6px 0' }} />
+                    <p style={{ margin: '3px 0' }}>🏷️ {scam.scam_type}</p>
+                    <p style={{ margin: '3px 0' }}>📍 {scam.city}, {scam.state}</p>
+                    <p style={{ margin: '3px 0' }}>💸 ₹{scam.amount_lost?.toLocaleString()}</p>
+                    <p style={{ margin: '3px 0' }}>📞 {scam.phone_number}</p>
+                    <p style={{ margin: '3px 0' }}>🔍 {scam.source}</p>
+                    <button onClick={() => {
+                      const text = `🚨 Scam Alert: ${scam.title} in ${scam.city}! #ScamTrackerIndia`;
+                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                    }}
+                      style={{ marginTop: '8px', padding: '4px 10px', borderRadius: '6px', border: 'none', background: '#1da1f2', color: 'white', fontSize: '12px', cursor: 'pointer' }}>
+                      🐦 Share on Twitter
+                    </button>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            );
+          })}
+        </MapContainer>
+      </div>
 
       {showForm && (
-        <ReportForm
-          onClose={() => setShowForm(false)}
-          onSubmit={() => fetchScams()}
-        />
+        <ReportForm onClose={() => setShowForm(false)} onSubmit={() => fetchScams()} />
       )}
 
       {showDashboard && (
         <Dashboard onClose={() => setShowDashboard(false)} />
       )}
-
     </div>
   );
 }
