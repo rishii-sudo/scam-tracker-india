@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import ReportForm from './ReportForm';
+import Dashboard from './Dashboard';
 
 const supabase = createClient(
   "https://rrlxidtytgeljsjfetly.supabase.co",
@@ -82,6 +83,7 @@ function App() {
   const [scams, setScams] = useState([]);
   const [filter, setFilter] = useState('All');
   const [showForm, setShowForm] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   const scamTypes = ['All','UPI Fraud','Job Scam','OLX Scam','Lottery Scam','KYC Fraud','Phishing','Fake Customer Care','Investment Scam','Matrimonial Scam','Fake Police Call','Credit Card Fraud'];
 
@@ -111,6 +113,7 @@ function App() {
 
   return (
     <div style={{ fontFamily: 'sans-serif', background: '#0f172a', minHeight: '100vh' }}>
+
       <div style={{ background: '#1e293b', color: 'white', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderBottom: '1px solid #334155' }}>
         <h1 style={{ margin: 0, fontSize: '20px' }}>🇮🇳 Scam Tracker India</h1>
         <select onChange={e => setFilter(e.target.value)}
@@ -124,6 +127,10 @@ function App() {
           <div style={{ background: '#f9731620', border: '1px solid #f97316', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', color: '#f97316' }}>
             ₹{totalLost.toLocaleString()} lost
           </div>
+          <button onClick={() => setShowDashboard(true)}
+            style={{ padding: '6px 16px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }}>
+            📊 Dashboard
+          </button>
           <button onClick={() => setShowForm(true)}
             style={{ padding: '6px 16px', borderRadius: '8px', border: 'none', background: '#ef4444', color: 'white', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }}>
             + Report Scam
@@ -173,6 +180,11 @@ function App() {
           onSubmit={() => fetchScams()}
         />
       )}
+
+      {showDashboard && (
+        <Dashboard onClose={() => setShowDashboard(false)} />
+      )}
+
     </div>
   );
 }
